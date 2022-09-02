@@ -20,6 +20,7 @@ x ≡ 5 mod 17
 Find the integer a such that x ≡ a mod 935
 '''
 
+# You can also use this: https://www.dcode.fr/chinese-remainder
 
 from functools import reduce
 
