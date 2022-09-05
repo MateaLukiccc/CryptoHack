@@ -63,7 +63,7 @@ def square_root(a, p):
             t = pow(t, 2, p)
 
         if m == 0:
-            return x
+            return [x,p-x]
 
         gs = pow(g, 2 ** (r - m - 1), p)
         g = (gs * gs) % p
@@ -77,4 +77,4 @@ def legendre_symbol(a, p):
     ls = pow(a, (p - 1) // 2, p)
     return -1 if ls == p - 1 else ls
 
-print(square_root(a, p))
+print(min(square_root(a, p)))
