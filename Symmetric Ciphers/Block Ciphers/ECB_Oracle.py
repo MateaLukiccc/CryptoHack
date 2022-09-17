@@ -1,38 +1,35 @@
 '''
 Chosen plaintext attack on ECB  https://crypto.stackexchange.com/questions/42891/chosen-plaintext-attack-on-aes-in-ecb-mode
+TLDR:
+ciphertext consists of input+flag+pad if blocks are 16 chars long(they are 32 but for demonstration lets say 16) then we have for input A*15:
+AAAAAAAAAAAAAAAc | rypto{wow}xxxxx 
+so if we send A*15 +all chars and match reference block with our made up we get flag letter by letter 
 '''
-
 import requests
-import json
+import string
+import binascii,json
 
-BASE_URL = 'http://aes.cryptohack.org/ecb_oracle/encrypt/'
-ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789_{}'
+url='http://aes.cryptohack.org/ecb_oracle/encrypt/'
 
-
-def ascii_to_hex(string: str) -> str:
-    return ''.join([hex(ord(c))[2:] for c in string])
-
-
-def get_letter(block, depth=1):
-    block = block[-31:]
-    trail = block[:32 - depth]
-
-    for letter in ALPHABET:
-        plaintext = ascii_to_hex(block + letter + trail)
-
-        response = requests.get(BASE_URL + plaintext)
-        ciphertext = json.loads(response.text)['ciphertext']
-
-        if ciphertext[32:64] == ciphertext[96:128]:
-            current_flag = block + letter
-            print(current_flag)
-            if letter != '}':
-                return get_letter(current_flag, depth + 1)
-            else:
-                return current_flag.lstrip('-')
-
-    return block.lstrip('-')
+def hex(p):
+    return (binascii.hexlify(p.encode())).decode()
 
 
-flag = get_letter('-' * 32)
-print("The flag is: " + flag)
+flag=''
+input='A'*32 #Let's assume flag length is between 16-32
+k=0
+while k<33:
+    for i in string.ascii_letters+string.digits+'{_}':
+        
+        r = requests.get(url+hex(input[:-1]))                            #input is A*31
+        
+        ref_block=json.loads(r.text)["ciphertext"][:64] #Reference block      #we get reference bloc for A*31+?
+        
+        r = requests.get(url+hex(input[:-1]+flag+i))                          #we send A*31+i  because flag='' until i matches ?
+        
+        if json.loads(r.text)["ciphertext"][:64]==ref_block:
+            flag+=i
+            print("\r"+flag, flush=True, end='') #crypto{p3n6u1n5_h473_3cb}
+            break
+    k+=1
+    input=input[:-1]
